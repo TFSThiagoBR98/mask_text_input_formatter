@@ -87,6 +87,9 @@ class MaskTextInputFormatter implements TextInputFormatter {
     if (_lastResValue == oldValue && newValue == _lastNewValue) {
       return oldValue;
     }
+    // set _resultTextArray if empty
+    if (_resultTextArray.isEmpty)
+      _resultTextArray.set(oldValue.text);
     if (oldValue.text.isEmpty) {
       _resultTextArray.clear();
     }
@@ -131,7 +134,7 @@ class MaskTextInputFormatter implements TextInputFormatter {
     for (var i = 0; i < min(beforeReplaceStart + beforeReplaceLength, mask.length); i++) {
       if (_maskChars.contains(mask[i]) && currentResultTextLength > 0) {
         currentResultTextLength -= 1;
-        if (i < beforeReplaceStart) {
+        if (i <= beforeReplaceStart) {
           currentResultSelectionStart += 1;
         }
         if (i >= beforeReplaceStart) {
@@ -143,6 +146,16 @@ class MaskTextInputFormatter implements TextInputFormatter {
     final String replacementText = afterText.substring(afterChangeStart, afterChangeEnd);
     int targetCursorPosition = currentResultSelectionStart;
     if (replacementText.isEmpty) {
+      if (currentResultSelectionStart == _resultTextArray.length && currentResultSelectionStart > 0) 
+        currentResultSelectionStart -= 1;
+      if (currentResultSelectionStart == (_resultTextArray.length - 1) && currentResultSelectionLength == 0)
+        currentResultSelectionLength += 1;
+      if (currentResultSelectionLength == 0 && lengthDifference < 0 && lengthAdded == 0 && lengthRemoved > 0)
+        currentResultSelectionLength += lengthRemoved;
+      if (targetCursorPosition == 1 && currentResultSelectionStart == 1 && beforeSelectionStart == 0) {
+        currentResultSelectionStart = 0;
+        targetCursorPosition -= 1;
+      }
       _resultTextArray.removeRange(currentResultSelectionStart, currentResultSelectionStart + currentResultSelectionLength);
     } else {
       if (currentResultSelectionLength > 0) {
